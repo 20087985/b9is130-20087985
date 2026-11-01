@@ -1,6 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function Home() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/events')
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setEvents(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching events:', err);
+        setError('Failed to load events. Please make sure the backend server is running.');
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
       {/* Hero Section */}
@@ -18,9 +42,30 @@ export default function Home() {
         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
           Upcoming Campus Events
         </h2>
-        <div style={{ color: '#777', fontStyle: 'italic' }}>
-          Events list structure goes here.
-        </div>
+
+        {loading && <p>Loading events from database...</p>}
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        {!loading && !error && events.length === 0 && (
+          <p style={{ color: '#777', fontStyle: 'italic' }}>No upcoming events found in the database.</p>
+        )}
+
+        {!loading && !error && events.length > 0 && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            {events.map((event) => (
+              <div key={event._id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', backgroundColor: '#fff' }}>
+                <h3 style={{ marginTop: '0', color: '#007bff' }}>{event.title}</h3>
+                <p><strong>Club:</strong> {event.clubName}</p>
+                <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
+                <p><strong>Location:</strong> {event.location}</p>
+                <p style={{ color: '#555' }}>{event.description}</p>
+                <button style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', width: '100%', marginTop: '10px' }}>
+                  RSVP Now
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );
