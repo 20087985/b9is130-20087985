@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-export default function Home() {
+export default function Home({ onLogout }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user && user.name) {
+      setUserName(user.name);
+    }
+
+  
     fetch('http://localhost:5000/api/events')
       .then((res) => {
         if (!res.ok) {
@@ -27,6 +34,19 @@ export default function Home() {
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Top Bar with Logout */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <span style={{ fontSize: '16px', color: '#555' }}>
+          Welcome, <strong>{userName || 'Student'}</strong>!
+        </span>
+        <button
+          onClick={onLogout}
+          style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          Logout
+        </button>
+      </div>
+
       {/* Hero Section */}
       <header style={{ textAlign: 'center', marginBottom: '40px', backgroundColor: '#f8f9fa', padding: '40px', borderRadius: '8px' }}>
         <h1 style={{ color: '#333', marginBottom: '10px', fontSize: '36px', lineHeight: '1.3' }}>
