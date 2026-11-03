@@ -1,31 +1,19 @@
-const express = require('express');
-const router = express.Router();
-const Registration = require('../models/Registration');
-const auth = require('../middleware/auth');
+// backend/middleware/auth.js
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = 'your_super_secret_jwt_key_here'; // Must match your auth.js secret key
 
-
-router.post('/:eventId', auth, async (req, res) => {
-  try {
-    const eventId = req.params.eventId;
-    const userId = req.user.userId;
-
-  
-    const existingRegistration = await Registration.findOne({ user: userId, event: eventId });
-    if (existingRegistration) {
-      return res.status(400).json({ error: 'You are already registered for this event!' });
-    }
-
-    const newRegistration = new Registration({
-      user: userId,
-      event: eventId
-    });
-
-    await newRegistration.save();
-    res.status(201).json({ message: 'Successfully registered for the event!' });
-  } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ error: 'Server error during registration' });
+module.exports = function (req, res, next) {
+  const authHeader = req.header('Authorization');
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Access denied. No token provided.' });
   }
-});
 
-module.exports = router;
+  try {
+    const token = authHeader.split(' ')[1]; // Bearer <token>
+    const verified = jwt.verify(token, JWT_SECRET);
+    req.user = verified; // Attach user info to request
+    next();
+  } catch (err) {
+    res.status(400).json({ error: 'Invalid token' });
+  }
+};

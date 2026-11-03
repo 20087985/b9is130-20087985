@@ -5,15 +5,14 @@ export default function Home({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
+  const [message, setMessage] = useState({}); 
 
   useEffect(() => {
-
     const user = JSON.parse(localStorage.getItem('user'));
     if (user && user.name) {
       setUserName(user.name);
     }
 
-  
     fetch('http://localhost:5000/api/events')
       .then((res) => {
         if (!res.ok) {
@@ -31,6 +30,29 @@ export default function Home({ onLogout }) {
         setLoading(false);
       });
   }, []);
+
+ 
+  const handleRegister = async (eventId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/registrations/${eventId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to register');
+      }
+
+      setMessage((prev) => ({ ...prev, [eventId]: { text: 'Successfully Registered!', type: 'success' } }));
+    } catch (err) {
+      setMessage((prev) => ({ ...prev, [eventId]: { text: err.message, type: 'error' } }));
+    }
+  };
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
@@ -53,11 +75,11 @@ export default function Home({ onLogout }) {
           Campus Club Event RSVP & Attendance Manager
         </h1>
         <p style={{ color: '#666', fontSize: '18px' }}>
-          Discover exciting student society events, RSVP instantly, and track your attendance!
+          Discover exciting student society events, register instantly, and track your attendance!
         </p>
       </header>
 
-      {/* Events Section */}
+    
       <section>
         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
           Upcoming Campus Events
@@ -79,9 +101,19 @@ export default function Home({ onLogout }) {
                 <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
                 <p><strong>Location:</strong> {event.location}</p>
                 <p style={{ color: '#555' }}>{event.description}</p>
-                <button style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', width: '100%', marginTop: '10px' }}>
-                  RSVP Now
+                
+                <button 
+                  onClick={() => handleRegister(event._id)}
+                  style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', width: '100%', marginTop: '10px' }}
+                >
+                  Register Now
                 </button>
+
+                {message[event._id] && (
+                  <p style={{ textAlign: 'center', marginTop: '10px', fontSize: '13px', color: message[event._id].type === 'success' ? 'green' : 'red' }}>
+                    {message[event._id].text}
+                  </p>
+                )}
               </div>
             ))}
           </div>
