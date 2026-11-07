@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import EventList from './EventList';
+import MyRegistrations from './MyRegistrations';
+import CreateEvent from './CreateEvent';
 
 export default function Home({ onLogout }) {
   const [events, setEvents] = useState([]);
   const [myRegistrations, setMyRegistrations] = useState([]);
-  const [activeTab, setActiveTab] = useState('events'); // 'events' or 'registrations'
+  const [activeTab, setActiveTab] = useState('events'); // 'events', 'registrations', or 'create'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
@@ -14,7 +17,6 @@ export default function Home({ onLogout }) {
     if (user && user.name) {
       setUserName(user.name);
     }
-
     fetchEvents();
   }, []);
 
@@ -55,7 +57,7 @@ export default function Home({ onLogout }) {
     setError(null);
     if (tab === 'events') {
       fetchEvents();
-    } else {
+    } else if (tab === 'registrations') {
       fetchMyRegistrations();
     }
   };
@@ -82,7 +84,7 @@ export default function Home({ onLogout }) {
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Top Bar with Logout & Welcome */}
+      {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <span style={{ fontSize: '16px', color: '#555' }}>
           Welcome, <strong>{userName || 'Student'}</strong>!
@@ -95,7 +97,7 @@ export default function Home({ onLogout }) {
         </button>
       </div>
 
-      {/* Hero Section */}
+      {/* Hero Header & Navigation Tabs */}
       <header style={{ textAlign: 'center', marginBottom: '30px', backgroundColor: '#f8f9fa', padding: '30px', borderRadius: '8px' }}>
         <h1 style={{ color: '#333', marginBottom: '10px', fontSize: '32px' }}>
           Campus Club Event RSVP & Attendance Manager
@@ -104,7 +106,6 @@ export default function Home({ onLogout }) {
           Discover exciting student society events, register instantly, and track your attendance!
         </p>
 
-        {/* Navigation Tabs */}
         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
           <button
             onClick={() => handleTabSwitch('events')}
@@ -118,72 +119,36 @@ export default function Home({ onLogout }) {
           >
             My Registrations
           </button>
+          <button
+            onClick={() => handleTabSwitch('create')}
+            style={{ padding: '10px 20px', backgroundColor: activeTab === 'create' ? '#28a745' : '#e0e0e0', color: activeTab === 'create' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            + Create Event
+          </button>
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Display Area */}
       <section>
         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
-          {activeTab === 'events' ? 'Upcoming Campus Events' : 'Events You Are Registered For'}
+          {activeTab === 'events' && 'Upcoming Campus Events'}
+          {activeTab === 'registrations' && 'Events You Are Registered For'}
+          {activeTab === 'create' && 'Create a New Event'}
         </h2>
 
         {loading && <p>Loading...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        {/* Tab 1: All Events */}
-        {!loading && !error && activeTab === 'events' && events.length === 0 && (
-          <p style={{ color: '#777', fontStyle: 'italic' }}>No upcoming events found.</p>
+        {!loading && !error && activeTab === 'events' && (
+          <EventList events={events} onRegister={handleRegister} messages={message} />
         )}
 
-        {!loading && !error && activeTab === 'events' && events.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-            {events.map((event) => (
-              <div key={event._id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', backgroundColor: '#fff', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                <h3 style={{ marginTop: '0', color: '#007bff' }}>{event.title}</h3>
-                <p><strong>Club:</strong> {event.clubName}</p>
-                <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-                <p><strong>Location:</strong> {event.location}</p>
-                <p style={{ color: '#555' }}>{event.description}</p>
-                
-                <button
-                  onClick={() => handleRegister(event._id)}
-                  style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', width: '100%', marginTop: '10px' }}
-                >
-                  Register Now
-                </button>
-
-                {message[event._id] && (
-                  <p style={{ textAlign: 'center', marginTop: '10px', fontSize: '13px', color: message[event._id].type === 'success' ? 'green' : 'red' }}>
-                    {message[event._id].text}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+        {!loading && !error && activeTab === 'registrations' && (
+          <MyRegistrations registrations={myRegistrations} />
         )}
 
-        {/* Tab 2: My Registrations */}
-        {!loading && !error && activeTab === 'registrations' && myRegistrations.length === 0 && (
-          <p style={{ color: '#777', fontStyle: 'italic' }}>You haven't registered for any events yet.</p>
-        )}
-
-        {!loading && !error && activeTab === 'registrations' && myRegistrations.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-            {myRegistrations.map((reg) => {
-              const event = reg.event;
-              if (!event) return null;
-              return (
-                <div key={reg._id} style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px', backgroundColor: '#e9f7ef', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                  <span style={{ backgroundColor: '#28a745', color: '#fff', padding: '2px 8px', fontSize: '12px', borderRadius: '4px', fontWeight: 'bold' }}>Registered ✓</span>
-                  <h3 style={{ marginTop: '10px', color: '#28a745' }}>{event.title}</h3>
-                  <p><strong>Club:</strong> {event.clubName}</p>
-                  <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-                  <p><strong>Location:</strong> {event.location}</p>
-                  <p style={{ color: '#555' }}>{event.description}</p>
-                </div>
-              );
-            })}
-          </div>
+        {!loading && !error && activeTab === 'create' && (
+          <CreateEvent onEventCreated={() => handleTabSwitch('events')} />
         )}
       </section>
     </div>
