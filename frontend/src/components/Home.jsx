@@ -83,24 +83,24 @@ export default function Home({ onLogout }) {
   };
 
   const handleUnregister = async (eventId) => {
-  const token = localStorage.getItem('token');
-  try {
-    const res = await fetch(`http://localhost:5000/api/registrations/${eventId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to cancel registration');
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`http://localhost:5000/api/registrations/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to cancel registration');
 
-    // Instantly remove it from local state view
-    setMyRegistrations((prev) => prev.filter((reg) => reg.event._id !== eventId));
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
-};
+
+      setMyRegistrations((prev) => prev.filter((reg) => reg.event._id !== eventId));
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
@@ -164,7 +164,7 @@ export default function Home({ onLogout }) {
         )}
 
         {!loading && !error && activeTab === 'registrations' && (
-          <MyRegistrations registrations={myRegistrations} />
+          <MyRegistrations registrations={myRegistrations} onUnregister={handleUnregister} />
         )}
 
         {!loading && !error && activeTab === 'create' && (
