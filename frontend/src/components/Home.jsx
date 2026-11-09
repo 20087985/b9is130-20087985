@@ -102,6 +102,11 @@ export default function Home({ onLogout }) {
       alert(err.message);
     }
   };
+  
+  const filteredEvents = events.filter((event) => 
+  event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  event.clubName.toLowerCase().includes(searchQuery.toLowerCase())
+);
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
