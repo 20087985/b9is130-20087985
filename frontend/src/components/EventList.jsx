@@ -5,6 +5,10 @@ export default function EventList({ events, onRegister, messages }) {
     return <p style={{ color: '#777', fontStyle: 'italic', textAlign: 'center' }}>No upcoming events found.</p>;
   }
 
+  if (events.length === 0) {
+    return <p style={{ color: '#777', fontStyle: 'italic', textAlign: 'center' }}>No matching events found.</p>;
+  }
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
       {events.map((event) => {

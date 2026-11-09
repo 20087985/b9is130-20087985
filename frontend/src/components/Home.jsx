@@ -6,7 +6,7 @@ import CreateEvent from './CreateEvent';
 export default function Home({ onLogout }) {
   const [events, setEvents] = useState([]);
   const [myRegistrations, setMyRegistrations] = useState([]);
-  const [activeTab, setActiveTab] = useState('events'); // 'events', 'registrations', or 'create'
+  const [activeTab, setActiveTab] = useState('events'); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
@@ -95,7 +95,6 @@ export default function Home({ onLogout }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to cancel registration');
 
-
       setMyRegistrations((prev) => prev.filter((reg) => reg.event._id !== eventId));
     } catch (err) {
       console.error(err);
@@ -104,9 +103,9 @@ export default function Home({ onLogout }) {
   };
   
   const filteredEvents = events.filter((event) => 
-  event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  event.clubName.toLowerCase().includes(searchQuery.toLowerCase())
-);
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.clubName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
@@ -162,11 +161,33 @@ export default function Home({ onLogout }) {
           {activeTab === 'create' && 'Create a New Event'}
         </h2>
 
+        {/* Search Bar (Only shown on 'events' tab) */}
+        {activeTab === 'events' && (
+          <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
+            <input
+              type="text"
+              placeholder="Search events by title or club..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ 
+                width: '100%', 
+                maxWidth: '500px', 
+                padding: '12px 15px', 
+                borderRadius: '6px', 
+                border: '1px solid #ccc', 
+                fontSize: '15px',
+                outline: 'none',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
+              }}
+            />
+          </div>
+        )}
+
         {loading && <p>Loading...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {!loading && !error && activeTab === 'events' && (
-          <EventList events={events} onRegister={handleRegister} messages={message} />
+          <EventList events={filteredEvents} onRegister={handleRegister} messages={message} />
         )}
 
         {!loading && !error && activeTab === 'registrations' && (
