@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function MyRegistrations({ registrations }) {
+export default function MyRegistrations({ registrations, onUnregister }) {
   if (registrations.length === 0) {
     return <p style={{ color: '#777', fontStyle: 'italic', textAlign: 'center' }}>You haven't registered for any events yet.</p>;
   }
@@ -18,6 +18,13 @@ export default function MyRegistrations({ registrations }) {
             <p><strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
             <p><strong>Location:</strong> {event.location}</p>
             <p style={{ color: '#555' }}>{event.description}</p>
+            
+            <button
+              onClick={() => onUnregister(event._id)}
+              style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', width: '100%', marginTop: '10px' }}
+            >
+              Cancel RSVP
+            </button>
           </div>
         );
       })}
