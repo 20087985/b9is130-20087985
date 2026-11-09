@@ -11,6 +11,7 @@ export default function Home({ onLogout }) {
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
   const [message, setMessage] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
