@@ -66,4 +66,23 @@ router.get('/my-registrations', verifyToken, async (req, res) => {
   }
 });
 
+
+
+router.delete('/:eventId', verifyToken, async (req, res) => {
+  try {
+    const eventId = req.params.eventId;
+    const userId = req.user.userId || req.user.id;
+
+    const deletedRegistration = await Registration.findOneAndDelete({ user: userId, event: eventId });
+    if (!deletedRegistration) {
+      return res.status(404).json({ error: 'Registration not found' });
+    }
+
+    res.status(200).json({ message: 'Successfully canceled registration' });
+  } catch (err) {
+    console.error('Cancel Registration Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
