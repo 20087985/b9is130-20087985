@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = 'your_super_secret_jwt_key_here'; 
 
-
 const verifyToken = (req, res, next) => {
   const authHeader = req.header('Authorization');
   if (!authHeader) {
@@ -23,23 +22,32 @@ const verifyToken = (req, res, next) => {
 };
 
 
+router.get('/my-registrations', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user.id;
+    const registrations = await Registration.find({ user: userId }).populate('event');
+    res.status(200).json(registrations);
+  } catch (err) {
+    console.error('Fetch Registrations Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 router.post('/:eventId', verifyToken, async (req, res) => {
   try {
     const eventId = req.params.eventId;
     const userId = req.user.userId || req.user.id;
 
-  
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-  
     const existing = await Registration.findOne({ user: userId, event: eventId });
     if (existing) {
       return res.status(400).json({ error: 'You are already registered for this event!' });
     }
-
 
     const registration = new Registration({ user: userId, event: eventId });
     await registration.save();
@@ -50,22 +58,6 @@ router.post('/:eventId', verifyToken, async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-
-router.get('/my-registrations', verifyToken, async (req, res) => {
-  try {
-    const userId = req.user.userId || req.user.id;
-
-
-    const registrations = await Registration.find({ user: userId }).populate('event');
-    
-    res.status(200).json(registrations);
-  } catch (err) {
-    console.error('Fetch Registrations Error:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
 
 
 router.delete('/:eventId', verifyToken, async (req, res) => {
