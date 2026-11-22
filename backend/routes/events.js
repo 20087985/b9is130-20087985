@@ -3,9 +3,9 @@ const router = express.Router();
 const Event = require('../models/Event');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 
-// Define auth middleware here
+
 const auth = (req, res, next) => {
   const authHeader = req.header('Authorization');
   if (!authHeader) return res.status(401).json({ error: 'No token provided' });
@@ -18,7 +18,7 @@ const auth = (req, res, next) => {
   }
 };
 
-// GET: Fetch all events
+
 router.get('/', async (req, res) => {
   try {
     const events = await Event.find().sort({ date: 1 });
@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST: Create a new event
+
 router.post('/', auth, async (req, res) => {
   try {
     const { title, clubName, date, location, description } = req.body;
