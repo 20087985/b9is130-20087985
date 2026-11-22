@@ -4,7 +4,7 @@ const Registration = require('../models/Registration');
 const Event = require('../models/Event');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = 'your_super_secret_jwt_key_here'; 
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.header('Authorization');

@@ -3,7 +3,7 @@ const router = express.Router();
 const Event = require('../models/Event');
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = 'your_super_secret_jwt_key_here'; // Match your secret key
+const JWT_SECRET = process.env.JWT_SECRET
 
 // Define auth middleware here
 const auth = (req, res, next) => {
