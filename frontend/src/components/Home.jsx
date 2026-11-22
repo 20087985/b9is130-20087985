@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import EventList from './EventList';
 import MyRegistrations from './MyRegistrations';
 import CreateEvent from './CreateEvent';
+import { API_URL } from '../config';
 
 export default function Home({ onLogout }) {
   const [events, setEvents] = useState([]);
@@ -23,7 +24,7 @@ export default function Home({ onLogout }) {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/events');
+      const res = await fetch(`${API_URL}/api/events`);
       if (!res.ok) throw new Error('Failed to fetch events');
       const data = await res.json();
       setEvents(data);
@@ -39,7 +40,7 @@ export default function Home({ onLogout }) {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5000/api/registrations/my-registrations', {
+      const res = await fetch(`${API_URL}/api/registrations/my-registrations`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Failed to fetch registrations');
@@ -66,7 +67,7 @@ export default function Home({ onLogout }) {
   const handleRegister = async (eventId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5000/api/registrations/${eventId}`, {
+      const res = await fetch(`${API_URL}/api/registrations/${eventId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +87,7 @@ export default function Home({ onLogout }) {
   const handleUnregister = async (eventId) => {
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`http://localhost:5000/api/registrations/${eventId}`, {
+      const res = await fetch(`${API_URL}/api/registrations/${eventId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

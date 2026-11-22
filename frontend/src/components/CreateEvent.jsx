@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_URL } from '../config';
 
 export default function CreateEvent({ onEventCreated }) {
   const [eventForm, setEventForm] = useState({
@@ -18,7 +19,7 @@ export default function CreateEvent({ onEventCreated }) {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:5000/api/events', {
+      const res = await fetch(`${API_URL}/api/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

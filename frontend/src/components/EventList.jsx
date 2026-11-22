@@ -1,5 +1,6 @@
 import React from 'react';
 
+
 export default function EventList({ events, onRegister, messages }) {
   if (events.length === 0) {
     return <p style={{ color: '#777', fontStyle: 'italic', textAlign: 'center' }}>No matching events found.</p>;

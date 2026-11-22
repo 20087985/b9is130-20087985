@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { API_URL } from '../config';
 export default function Login({ onLoginSuccess }) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
@@ -13,7 +13,7 @@ export default function Login({ onLoginSuccess }) {
     setError('');
     setSuccessMsg('');
 
-    const endpoint = isRegistering ? 'http://localhost:5000/api/auth/register' : 'http://localhost:5000/api/auth/login';
+    const endpoint = isRegistering ? `${API_URL}/api/auth/register` : `${API_URL}/api/auth/login`;
     const payload = isRegistering ? { name, email, password } : { email, password };
 
     try {
