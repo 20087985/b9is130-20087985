@@ -35,10 +35,21 @@ router.get('/', async (req, res) => {
 
 router.post('/', auth, adminOnly, async (req, res) => {
   try {
-    const { title, clubName, date, location, description } = req.body;
+    const { title, clubName, date, location, description, capacity } = req.body;
+    const parsedCapacity = Number(capacity);
 
-    if (!title || !clubName || !date || !location || !description) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (
+      !title ||
+      !clubName ||
+      !date ||
+      !location ||
+      !description ||
+      !Number.isFinite(parsedCapacity) ||
+      parsedCapacity < 1
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'All fields (including a valid capacity of at least 1) are required' });
     }
 
     const newEvent = new Event({
@@ -47,6 +58,8 @@ router.post('/', auth, adminOnly, async (req, res) => {
       date,
       location,
       description,
+      capacity: parsedCapacity,
+      registeredCount: 0,
       createdBy: req.user.userId
     });
 

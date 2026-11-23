@@ -49,8 +49,33 @@ router.post('/:eventId', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'You are already registered for this event!' });
     }
 
-    const registration = new Registration({ user: userId, event: eventId });
-    await registration.save();
+
+    const updatedEvent = await Event.findOneAndUpdate(
+      {
+        _id: eventId,
+        $expr: {
+          $lt: [{ $ifNull: ['$registeredCount', 0] }, '$capacity']
+        }
+      },
+      { $inc: { registeredCount: 1 } },
+      { new: true }
+    );
+
+    if (!updatedEvent) {
+      return res.status(400).json({ error: 'Event is full! No seats available.' });
+    }
+
+    try {
+      const registration = new Registration({ user: userId, event: eventId });
+      await registration.save();
+    } catch (saveErr) {
+      // Roll back the claimed seat if saving the registration fails
+      await Event.findOneAndUpdate(
+        { _id: eventId, registeredCount: { $gt: 0 } },
+        { $inc: { registeredCount: -1 } }
+      );
+      throw saveErr;
+    }
 
     res.status(201).json({ message: 'Successfully registered!' });
   } catch (err) {
@@ -69,6 +94,12 @@ router.delete('/:eventId', verifyToken, async (req, res) => {
     if (!deletedRegistration) {
       return res.status(404).json({ error: 'Registration not found' });
     }
+
+   
+    await Event.findOneAndUpdate(
+      { _id: eventId, registeredCount: { $gt: 0 } },
+      { $inc: { registeredCount: -1 } }
+    );
 
     res.status(200).json({ message: 'Successfully canceled registration' });
   } catch (err) {

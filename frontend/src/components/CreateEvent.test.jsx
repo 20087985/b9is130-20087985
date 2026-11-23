@@ -19,6 +19,9 @@ function fillEventForm() {
   fireEvent.change(screen.getByPlaceholderText(/location/i), {
     target: { name: 'location', value: 'Room 101' },
   });
+  fireEvent.change(screen.getByPlaceholderText(/seat capacity/i), {
+    target: { name: 'capacity', value: '50' },
+  });
   fireEvent.change(screen.getByPlaceholderText(/event description/i), {
     target: { name: 'description', value: 'Hands-on session on AI tools.' },
   });
@@ -38,11 +41,12 @@ describe('CreateEvent component', () => {
     expect(screen.getByPlaceholderText(/club name/i)).toBeInTheDocument();
     expect(document.querySelector('input[name="date"]')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/location/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/seat capacity/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/event description/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /publish event/i })).toBeInTheDocument();
   });
 
-  it('submits form with Authorization header, shows success message, resets fields, and calls onEventCreated', async () => {
+  it('submits form with Authorization header and numeric capacity, shows success message, resets fields, and calls onEventCreated', async () => {
     localStorage.setItem('token', 'mock-auth-token');
     const onEventCreated = vi.fn();
 
@@ -74,6 +78,7 @@ describe('CreateEvent component', () => {
           clubName: 'Tech Club',
           date: '2026-12-15',
           location: 'Room 101',
+          capacity: 50,
           description: 'Hands-on session on AI tools.',
         }),
       })
@@ -83,6 +88,7 @@ describe('CreateEvent component', () => {
     expect(screen.getByPlaceholderText('Event Title')).toHaveValue('');
     expect(screen.getByPlaceholderText(/club name/i)).toHaveValue('');
     expect(screen.getByPlaceholderText(/location/i)).toHaveValue('');
+    expect(screen.getByPlaceholderText(/seat capacity/i)).toHaveValue(null);
     expect(screen.getByPlaceholderText(/event description/i)).toHaveValue('');
   });
 

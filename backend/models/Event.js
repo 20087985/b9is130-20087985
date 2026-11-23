@@ -6,6 +6,8 @@ const eventSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   location: { type: String, required: true },
   description: { type: String, required: true },
+  capacity: { type: Number, required: true, min: 1 },
+  registeredCount: { type: Number, default: 0, min: 0 },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 

@@ -7,6 +7,7 @@ export default function CreateEvent({ onEventCreated }) {
     clubName: '',
     date: '',
     location: '',
+    capacity: '',
     description: ''
   });
   const [message, setMessage] = useState({ text: '', type: '' });
@@ -25,14 +26,17 @@ export default function CreateEvent({ onEventCreated }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(eventForm)
+        body: JSON.stringify({
+          ...eventForm,
+          capacity: Number(eventForm.capacity)
+        })
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create event');
 
       setMessage({ text: 'Event created successfully!', type: 'success' });
-      setEventForm({ title: '', clubName: '', date: '', location: '', description: '' });
+      setEventForm({ title: '', clubName: '', date: '', location: '', capacity: '', description: '' });
       if (onEventCreated) onEventCreated(); 
     } catch (err) {
       setMessage({ text: err.message, type: 'error' });
@@ -75,6 +79,16 @@ export default function CreateEvent({ onEventCreated }) {
           name="location"
           placeholder="Location (e.g., Auditorium Hall A)"
           value={eventForm.location}
+          onChange={handleInputChange}
+          required
+          style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+        <input
+          type="number"
+          name="capacity"
+          placeholder="Seat Capacity (e.g., 50)"
+          min="1"
+          value={eventForm.capacity}
           onChange={handleInputChange}
           required
           style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}

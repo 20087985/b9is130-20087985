@@ -23,6 +23,7 @@ describe('Registration routes (/api/registrations)', () => {
   let originalFindOneAndDelete;
   let originalSave;
   let originalFindById;
+  let originalFindOneAndUpdate;
   let originalVerify;
   let originalConsoleError;
 
@@ -32,6 +33,7 @@ describe('Registration routes (/api/registrations)', () => {
     originalFindOneAndDelete = Registration.findOneAndDelete;
     originalSave = Registration.prototype.save;
     originalFindById = Event.findById;
+    originalFindOneAndUpdate = Event.findOneAndUpdate;
     originalVerify = jwt.verify;
     originalConsoleError = console.error;
     console.error = () => {};
@@ -43,6 +45,7 @@ describe('Registration routes (/api/registrations)', () => {
     Registration.findOneAndDelete = originalFindOneAndDelete;
     Registration.prototype.save = originalSave;
     Event.findById = originalFindById;
+    Event.findOneAndUpdate = originalFindOneAndUpdate;
     jwt.verify = originalVerify;
     console.error = originalConsoleError;
   });
@@ -138,7 +141,12 @@ describe('Registration routes (/api/registrations)', () => {
 
     it('returns 400 when the user is already registered for the event', async () => {
       jwt.verify = () => ({ userId: 'user-123' });
-      Event.findById = async () => ({ _id: 'event-1', title: 'AI Meetup' });
+      Event.findById = async () => ({
+        _id: 'event-1',
+        title: 'AI Meetup',
+        capacity: 10,
+        registeredCount: 2,
+      });
       Registration.findOne = async (query) => {
         assert.deepEqual(query, { user: 'user-123', event: 'event-1' });
         return { _id: 'existing-reg' };
@@ -155,11 +163,44 @@ describe('Registration routes (/api/registrations)', () => {
       });
     });
 
-  it('creates a registration and returns 201 when valid', async () => {
-      let savedDoc = null;
+    it('returns 400 when the event is already at full capacity', async () => {
       jwt.verify = () => ({ userId: 'user-123' });
-      Event.findById = async () => ({ _id: 'event-1', title: 'AI Meetup' });
+      Event.findById = async () => ({
+        _id: 'event-1',
+        title: 'AI Meetup',
+        capacity: 1,
+        registeredCount: 1,
+      });
       Registration.findOne = async () => null;
+      Event.findOneAndUpdate = async () => null;
+
+      const app = createTestApp();
+      const res = await request(app)
+        .post('/api/registrations/event-1')
+        .set('Authorization', 'Bearer valid-token');
+
+      assert.equal(res.status, 400);
+      assert.deepEqual(res.body, {
+        error: 'Event is full! No seats available.',
+      });
+    });
+
+    it('increments registeredCount, creates a registration, and returns 201 when seats are available', async () => {
+      let savedDoc = null;
+      let updateArgs = null;
+
+      jwt.verify = () => ({ userId: 'user-123' });
+      Event.findById = async () => ({
+        _id: 'event-1',
+        title: 'AI Meetup',
+        capacity: 10,
+        registeredCount: 2,
+      });
+      Registration.findOne = async () => null;
+      Event.findOneAndUpdate = async (filter, update, options) => {
+        updateArgs = { filter, update, options };
+        return { _id: 'event-1', capacity: 10, registeredCount: 3 };
+      };
       Registration.prototype.save = async function mockSave() {
         savedDoc = { ...this._doc };
         return this;
@@ -172,13 +213,27 @@ describe('Registration routes (/api/registrations)', () => {
 
       assert.equal(res.status, 201);
       assert.deepEqual(res.body, { message: 'Successfully registered!' });
+      assert.equal(updateArgs.filter._id, 'event-1');
+      assert.deepEqual(updateArgs.update, { $inc: { registeredCount: 1 } });
+      assert.deepEqual(updateArgs.options, { new: true });
       assert.ok(savedDoc !== null);
     });
 
-    it('returns 500 when saving registration fails', async () => {
+    it('rolls back registeredCount and returns 500 when saving registration fails', async () => {
+      const updateCalls = [];
+
       jwt.verify = () => ({ userId: 'user-123' });
-      Event.findById = async () => ({ _id: 'event-1', title: 'AI Meetup' });
+      Event.findById = async () => ({
+        _id: 'event-1',
+        title: 'AI Meetup',
+        capacity: 10,
+        registeredCount: 2,
+      });
       Registration.findOne = async () => null;
+      Event.findOneAndUpdate = async (filter, update) => {
+        updateCalls.push({ filter, update });
+        return { _id: 'event-1', capacity: 10, registeredCount: 3 };
+      };
       Registration.prototype.save = async () => {
         throw new Error('Save failed');
       };
@@ -190,6 +245,8 @@ describe('Registration routes (/api/registrations)', () => {
 
       assert.equal(res.status, 500);
       assert.deepEqual(res.body, { error: 'Save failed' });
+      assert.equal(updateCalls.length, 2);
+      assert.deepEqual(updateCalls[1].update, { $inc: { registeredCount: -1 } });
     });
   });
 
@@ -210,9 +267,15 @@ describe('Registration routes (/api/registrations)', () => {
       assert.deepEqual(res.body, { error: 'Registration not found' });
     });
 
-    it('cancels registration and returns 200 when found', async () => {
+    it('cancels registration, decrements registeredCount to free a seat, and returns 200', async () => {
+      let decrementCall = null;
+
       jwt.verify = () => ({ userId: 'user-123' });
       Registration.findOneAndDelete = async () => ({ _id: 'reg-1' });
+      Event.findOneAndUpdate = async (filter, update) => {
+        decrementCall = { filter, update };
+        return { _id: 'event-1', capacity: 1, registeredCount: 0 };
+      };
 
       const app = createTestApp();
       const res = await request(app)
@@ -222,6 +285,10 @@ describe('Registration routes (/api/registrations)', () => {
       assert.equal(res.status, 200);
       assert.deepEqual(res.body, {
         message: 'Successfully canceled registration',
+      });
+      assert.deepEqual(decrementCall, {
+        filter: { _id: 'event-1', registeredCount: { $gt: 0 } },
+        update: { $inc: { registeredCount: -1 } },
       });
     });
 

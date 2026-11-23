@@ -84,8 +84,10 @@ export default function Home({ onLogout }) {
       if (!res.ok) throw new Error(data.error || 'Failed to register');
 
       setMessage((prev) => ({ ...prev, [eventId]: { text: 'Successfully Registered!', type: 'success' } }));
+      await fetchEvents();
     } catch (err) {
       setMessage((prev) => ({ ...prev, [eventId]: { text: err.message, type: 'error' } }));
+      await fetchEvents();
     }
   };
 
@@ -102,6 +104,7 @@ export default function Home({ onLogout }) {
       if (!res.ok) throw new Error(data.error || 'Failed to cancel registration');
 
       setMyRegistrations((prev) => prev.filter((reg) => reg.event._id !== eventId));
+      await fetchEvents();
     } catch (err) {
       console.error(err);
       alert(err.message);

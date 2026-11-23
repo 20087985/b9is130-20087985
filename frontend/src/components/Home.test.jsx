@@ -13,6 +13,11 @@ vi.mock('./EventList', () => ({
       {events.map((evt) => (
         <div key={evt._id}>
           <span>{evt.title}</span>
+          {typeof evt.capacity === 'number' && (
+            <span>
+              Seats: {evt.registeredCount ?? 0}/{evt.capacity}
+            </span>
+          )}
           <button type="button" onClick={() => onRegister(evt._id)}>
             Register {evt.title}
           </button>
@@ -51,8 +56,8 @@ vi.mock('./CreateEvent', () => ({
 }));
 
 const mockEvents = [
-  { _id: 'evt-1', title: 'Hackathon Kickoff', clubName: 'CS Society' },
-  { _id: 'evt-2', title: 'Chess Tournament', clubName: 'Board Games Club' },
+  { _id: 'evt-1', title: 'Hackathon Kickoff', clubName: 'CS Society', capacity: 2, registeredCount: 0 },
+  { _id: 'evt-2', title: 'Chess Tournament', clubName: 'Board Games Club', capacity: 4, registeredCount: 1 },
 ];
 
 describe('Home component', () => {
@@ -165,8 +170,13 @@ describe('Home component', () => {
     );
   });
 
-  it('handles event registration and shows success feedback', async () => {
+  it('handles event registration, shows success feedback, and refreshes event seat counts', async () => {
     localStorage.setItem('token', 'test-token');
+
+    const updatedEvents = [
+      { ...mockEvents[0], registeredCount: 1 },
+      mockEvents[1],
+    ];
 
     const fetchMock = vi
       .fn()
@@ -177,6 +187,10 @@ describe('Home component', () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ message: 'Successfully registered!' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => updatedEvents,
       });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -190,6 +204,98 @@ describe('Home component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Successfully Registered!')).toBeInTheDocument();
+      expect(screen.getByText('Seats: 1/2')).toBeInTheDocument();
+    });
+  });
+
+  it('shows error feedback and refreshes events when registration fails due to full capacity', async () => {
+    localStorage.setItem('token', 'test-token');
+
+    const fullEvents = [
+      { ...mockEvents[0], capacity: 1, registeredCount: 1 },
+      mockEvents[1],
+    ];
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => fullEvents,
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: 'Event is full! No seats available.' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => fullEvents,
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<Home onLogout={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Hackathon Kickoff')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /register hackathon kickoff/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Event is full! No seats available.')).toBeInTheDocument();
+    });
+  });
+
+  it('cancels a registration in My Registrations and refreshes event seat counts', async () => {
+    localStorage.setItem('token', 'test-token');
+
+    const initialEvents = [{ ...mockEvents[0], capacity: 1, registeredCount: 1 }];
+    const reopenedEvents = [{ ...mockEvents[0], capacity: 1, registeredCount: 0 }];
+    const mockRegs = [
+      { _id: 'reg-1', event: { _id: 'evt-1', title: 'Hackathon Kickoff' } },
+    ];
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => initialEvents,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockRegs,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ message: 'Successfully canceled registration' }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => reopenedEvents,
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<Home onLogout={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Seats: 1/1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /my registrations/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('MyRegistrations Count: 1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /unregister hackathon kickoff/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('MyRegistrations Count: 0')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /all events/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Seats: 0/1')).toBeInTheDocument();
     });
   });
 

@@ -40,8 +40,8 @@ describe('Event routes (/api/events)', () => {
   describe('GET /api/events', () => {
     it('returns sorted events with status 200', async () => {
       const sampleEvents = [
-        { _id: '1', title: 'Coding Workshop', clubName: 'Tech Club' },
-        { _id: '2', title: 'Debate Night', clubName: 'Debate Society' },
+        { _id: '1', title: 'Coding Workshop', clubName: 'Tech Club', capacity: 30, registeredCount: 5 },
+        { _id: '2', title: 'Debate Night', clubName: 'Debate Society', capacity: 50, registeredCount: 12 },
       ];
 
       Event.find = () => ({
@@ -79,6 +79,7 @@ describe('Event routes (/api/events)', () => {
       clubName: 'Computer Science Society',
       date: '2026-12-10T18:00:00.000Z',
       location: 'Main Hall',
+      capacity: 50,
       description: 'Annual campus hackathon briefing and team formation.',
     };
 
@@ -128,10 +129,27 @@ describe('Event routes (/api/events)', () => {
         .send({ title: 'Incomplete Event' });
 
       assert.equal(res.status, 400);
-      assert.deepEqual(res.body, { error: 'All fields are required' });
+      assert.deepEqual(res.body, {
+        error: 'All fields (including a valid capacity of at least 1) are required',
+      });
     });
 
-    it('creates an event and returns 201 for an authenticated admin user', async () => {
+    it('returns 400 when capacity is less than 1 or invalid for an admin user', async () => {
+      jwt.verify = () => ({ userId: 'admin-123', name: 'Alex', role: 'admin' });
+
+      const app = createTestApp();
+      const res = await request(app)
+        .post('/api/events')
+        .set('Authorization', 'Bearer valid-token')
+        .send({ ...validPayload, capacity: 0 });
+
+      assert.equal(res.status, 400);
+      assert.deepEqual(res.body, {
+        error: 'All fields (including a valid capacity of at least 1) are required',
+      });
+    });
+
+    it('creates an event with capacity and registeredCount 0 and returns 201 for an admin user', async () => {
       let savedDoc = null;
       jwt.verify = () => ({ userId: 'admin-123', name: 'Alex', role: 'admin' });
       Event.prototype.save = async function mockSave() {
@@ -140,6 +158,8 @@ describe('Event routes (/api/events)', () => {
           clubName: this.clubName,
           date: this.date,
           location: this.location,
+          capacity: this.capacity,
+          registeredCount: this.registeredCount,
           description: this.description,
         };
         return this;
@@ -158,6 +178,8 @@ describe('Event routes (/api/events)', () => {
         clubName: validPayload.clubName,
         date: new Date(validPayload.date),
         location: validPayload.location,
+        capacity: 50,
+        registeredCount: 0,
         description: validPayload.description,
       });
     });
