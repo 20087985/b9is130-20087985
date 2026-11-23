@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-
 const auth = (req, res, next) => {
   const authHeader = req.header('Authorization');
   if (!authHeader) return res.status(401).json({ error: 'No token provided' });
@@ -18,6 +17,12 @@ const auth = (req, res, next) => {
   }
 };
 
+const adminOnly = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden: admin access required' });
+  }
+  next();
+};
 
 router.get('/', async (req, res) => {
   try {
@@ -28,8 +33,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, adminOnly, async (req, res) => {
   try {
     const { title, clubName, date, location, description } = req.body;
 

@@ -49,7 +49,7 @@ describe('Auth routes (/api/auth)', () => {
   });
 
   describe('POST /api/auth/register', () => {
-    it('registers a new user and returns 201', async () => {
+    it('registers a new user with default role student and returns 201', async () => {
       let savedUserDoc = null;
 
       User.findOne = async () => null;
@@ -60,6 +60,7 @@ describe('Auth routes (/api/auth)', () => {
           name: this.name,
           email: this.email,
           password: this.password,
+          role: this.role,
         };
         return this;
       };
@@ -71,6 +72,7 @@ describe('Auth routes (/api/auth)', () => {
           name: 'Alex Morgan',
           email: 'alex@example.com',
           password: 'Password123',
+          role: 'admin',
         });
 
       assert.equal(res.status, 201);
@@ -79,6 +81,7 @@ describe('Auth routes (/api/auth)', () => {
         name: 'Alex Morgan',
         email: 'alex@example.com',
         password: 'hashed-password-123',
+        role: 'student',
       });
     });
 
@@ -118,15 +121,21 @@ describe('Auth routes (/api/auth)', () => {
   });
 
   describe('POST /api/auth/login', () => {
-    it('returns 200, a token, and user info for valid credentials', async () => {
+    it('returns 200, a token with role, and user info including role for valid credentials', async () => {
+      let signedPayload = null;
+
       User.findOne = async () => ({
         _id: 'user-123',
         name: 'Alex Morgan',
         email: 'alex@example.com',
         password: 'hashed-password-123',
+        role: 'admin',
       });
       bcrypt.compare = async () => true;
-      jwt.sign = () => 'mock-jwt-token';
+      jwt.sign = (payload) => {
+        signedPayload = payload;
+        return 'mock-jwt-token';
+      };
 
       const app = createTestApp();
       const res = await request(app)
@@ -139,10 +148,16 @@ describe('Auth routes (/api/auth)', () => {
       assert.equal(res.status, 200);
       assert.equal(res.body.message, 'Login successful');
       assert.equal(res.body.token, 'mock-jwt-token');
+      assert.deepEqual(signedPayload, {
+        userId: 'user-123',
+        name: 'Alex Morgan',
+        role: 'admin',
+      });
       assert.deepEqual(res.body.user, {
         id: 'user-123',
         name: 'Alex Morgan',
         email: 'alex@example.com',
+        role: 'admin',
       });
     });
 
@@ -167,6 +182,7 @@ describe('Auth routes (/api/auth)', () => {
         name: 'Alex Morgan',
         email: 'alex@example.com',
         password: 'hashed-password-123',
+        role: 'student',
       });
       bcrypt.compare = async () => false;
 

@@ -11,13 +11,15 @@ export default function Home({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState('');
+  const [userRole, setUserRole] = useState('student');
   const [message, setMessage] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user'));
-    if (user && user.name) {
-      setUserName(user.name);
+    if (user) {
+      if (user.name) setUserName(user.name);
+      if (user.role) setUserRole(user.role);
     }
     fetchEvents();
   }, []);
@@ -55,6 +57,9 @@ export default function Home({ onLogout }) {
   };
 
   const handleTabSwitch = (tab) => {
+    if (tab === 'create' && userRole !== 'admin') {
+      return;
+    }
     setActiveTab(tab);
     setError(null);
     if (tab === 'events') {
@@ -145,12 +150,14 @@ export default function Home({ onLogout }) {
           >
             My Registrations
           </button>
-          <button
-            onClick={() => handleTabSwitch('create')}
-            style={{ padding: '10px 20px', backgroundColor: activeTab === 'create' ? '#28a745' : '#e0e0e0', color: activeTab === 'create' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            + Create Event
-          </button>
+          {userRole === 'admin' && (
+            <button
+              onClick={() => handleTabSwitch('create')}
+              style={{ padding: '10px 20px', backgroundColor: activeTab === 'create' ? '#28a745' : '#e0e0e0', color: activeTab === 'create' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              + Create Event
+            </button>
+          )}
         </div>
       </header>
 
@@ -159,7 +166,7 @@ export default function Home({ onLogout }) {
         <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
           {activeTab === 'events' && 'Upcoming Campus Events'}
           {activeTab === 'registrations' && 'Events You Are Registered For'}
-          {activeTab === 'create' && 'Create a New Event'}
+          {activeTab === 'create' && userRole === 'admin' && 'Create a New Event'}
         </h2>
 
         {/* Search Bar (Only shown on 'events' tab) */}
@@ -195,7 +202,7 @@ export default function Home({ onLogout }) {
           <MyRegistrations registrations={myRegistrations} onUnregister={handleUnregister} />
         )}
 
-        {!loading && !error && activeTab === 'create' && (
+        {!loading && !error && activeTab === 'create' && userRole === 'admin' && (
           <CreateEvent onEventCreated={() => handleTabSwitch('events')} />
         )}
       </section>

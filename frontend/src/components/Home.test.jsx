@@ -62,7 +62,7 @@ describe('Home component', () => {
   });
 
   it('displays welcome user name from localStorage, fetches events, and supports search filtering', async () => {
-    localStorage.setItem('user', JSON.stringify({ name: 'Basima' }));
+    localStorage.setItem('user', JSON.stringify({ name: 'Basima', role: 'student' }));
 
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -84,6 +84,26 @@ describe('Home component', () => {
     expect(screen.getByText('EventList Count: 1')).toBeInTheDocument();
     expect(screen.getByText('Chess Tournament')).toBeInTheDocument();
     expect(screen.queryByText('Hackathon Kickoff')).not.toBeInTheDocument();
+  });
+
+  it('hides Create Event tab for non-admin users', async () => {
+    localStorage.setItem('user', JSON.stringify({ name: 'Basima', role: 'student' }));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockEvents,
+      })
+    );
+
+    render(<Home onLogout={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('EventList Count: 2')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /\+ create event/i })).not.toBeInTheDocument();
   });
 
   it('calls onLogout when Logout button is clicked', async () => {
@@ -173,7 +193,9 @@ describe('Home component', () => {
     });
   });
 
-  it('switches to Create Event tab and returns to Events tab on creation', async () => {
+  it('switches to Create Event tab and returns to Events tab on creation for admin users', async () => {
+    localStorage.setItem('user', JSON.stringify({ name: 'Basima', role: 'admin' }));
+
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => mockEvents,

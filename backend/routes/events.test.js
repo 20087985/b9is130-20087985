@@ -105,8 +105,21 @@ describe('Event routes (/api/events)', () => {
       assert.deepEqual(res.body, { error: 'Invalid token' });
     });
 
-    it('returns 400 when required fields are missing', async () => {
-      jwt.verify = () => ({ userId: 'user-123', name: 'Alex' });
+    it('returns 403 when authenticated user is not an admin', async () => {
+      jwt.verify = () => ({ userId: 'user-123', name: 'Alex', role: 'student' });
+
+      const app = createTestApp();
+      const res = await request(app)
+        .post('/api/events')
+        .set('Authorization', 'Bearer student-token')
+        .send(validPayload);
+
+      assert.equal(res.status, 403);
+      assert.deepEqual(res.body, { error: 'Forbidden: admin access required' });
+    });
+
+    it('returns 400 when required fields are missing for an admin user', async () => {
+      jwt.verify = () => ({ userId: 'admin-123', name: 'Alex', role: 'admin' });
 
       const app = createTestApp();
       const res = await request(app)
@@ -118,9 +131,9 @@ describe('Event routes (/api/events)', () => {
       assert.deepEqual(res.body, { error: 'All fields are required' });
     });
 
-  it('creates an event and returns 201 for an authenticated user', async () => {
+    it('creates an event and returns 201 for an authenticated admin user', async () => {
       let savedDoc = null;
-      jwt.verify = () => ({ userId: 'user-123', name: 'Alex' });
+      jwt.verify = () => ({ userId: 'admin-123', name: 'Alex', role: 'admin' });
       Event.prototype.save = async function mockSave() {
         savedDoc = {
           title: this.title,
@@ -149,8 +162,8 @@ describe('Event routes (/api/events)', () => {
       });
     });
 
-    it('returns 500 when saving the event fails', async () => {
-      jwt.verify = () => ({ userId: 'user-123', name: 'Alex' });
+    it('returns 500 when saving the event fails for an admin user', async () => {
+      jwt.verify = () => ({ userId: 'admin-123', name: 'Alex', role: 'admin' });
       Event.prototype.save = async () => {
         throw new Error('DB write error');
       };
