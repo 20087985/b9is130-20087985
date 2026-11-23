@@ -110,6 +110,53 @@ export default function Home({ onLogout }) {
       alert(err.message);
     }
   };
+
+  const handleEditEvent = async (eventId, updatedData) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/events/${eventId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedData)
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update event');
+
+      setMessage((prev) => ({ ...prev, [eventId]: { text: 'Event updated successfully!', type: 'success' } }));
+      await fetchEvents();
+    } catch (err) {
+      setMessage((prev) => ({ ...prev, [eventId]: { text: err.message, type: 'error' } }));
+    }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`${API_URL}/api/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete event');
+
+      setEvents((prev) => prev.filter((evt) => evt._id !== eventId));
+      setMyRegistrations((prev) => prev.filter((reg) => reg.event?._id !== eventId));
+      setMessage((prev) => {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      });
+    } catch (err) {
+      setMessage((prev) => ({ ...prev, [eventId]: { text: err.message, type: 'error' } }));
+    }
+  };
   
   const filteredEvents = events.filter((event) => 
     event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -198,7 +245,14 @@ export default function Home({ onLogout }) {
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
         {!loading && !error && activeTab === 'events' && (
-          <EventList events={filteredEvents} onRegister={handleRegister} messages={message} />
+          <EventList
+            events={filteredEvents}
+            onRegister={handleRegister}
+            messages={message}
+            userRole={userRole}
+            onEditEvent={handleEditEvent}
+            onDeleteEvent={handleDeleteEvent}
+          />
         )}
 
         {!loading && !error && activeTab === 'registrations' && (

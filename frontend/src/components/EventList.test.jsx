@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import EventList from './EventList';
 
 const sampleEvents = [
@@ -82,6 +82,107 @@ describe('EventList component', () => {
 
     fireEvent.click(fullButton);
     expect(onRegister).not.toHaveBeenCalled();
+  });
+
+  it('hides Edit and Delete buttons for non-admin users', () => {
+    render(
+      <EventList
+        events={sampleEvents}
+        onRegister={vi.fn()}
+        messages={{}}
+        userRole="student"
+        onEditEvent={vi.fn()}
+        onDeleteEvent={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^delete$/i })).not.toBeInTheDocument();
+  });
+
+  it('shows Edit and Delete buttons for admin users and calls onDeleteEvent when Delete is clicked', () => {
+    const onDeleteEvent = vi.fn();
+    render(
+      <EventList
+        events={sampleEvents}
+        onRegister={vi.fn()}
+        messages={{}}
+        userRole="admin"
+        onEditEvent={vi.fn()}
+        onDeleteEvent={onDeleteEvent}
+      />
+    );
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    const deleteButtons = screen.getAllByRole('button', { name: /^delete$/i });
+    expect(editButtons).toHaveLength(2);
+    expect(deleteButtons).toHaveLength(2);
+
+    fireEvent.click(deleteButtons[0]);
+    expect(onDeleteEvent).toHaveBeenCalledTimes(1);
+    expect(onDeleteEvent).toHaveBeenCalledWith('evt-1');
+  });
+
+  it('opens inline edit form, saves changes via onEditEvent, and closes the form', async () => {
+    const onEditEvent = vi.fn().mockResolvedValue(undefined);
+    render(
+      <EventList
+        events={sampleEvents}
+        onRegister={vi.fn()}
+        messages={{}}
+        userRole="admin"
+        onEditEvent={onEditEvent}
+        onDeleteEvent={vi.fn()}
+      />
+    );
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    fireEvent.click(editButtons[0]);
+
+    const titleInput = screen.getByPlaceholderText('Event Title');
+    const capacityInput = screen.getByPlaceholderText('Seat Capacity');
+    expect(titleInput).toHaveValue('Hackathon Kickoff');
+    expect(capacityInput).toHaveValue(20);
+
+    fireEvent.change(titleInput, { target: { name: 'title', value: 'Hackathon Kickoff v2' } });
+    fireEvent.change(capacityInput, { target: { name: 'capacity', value: '30' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(onEditEvent).toHaveBeenCalledTimes(1);
+      expect(onEditEvent).toHaveBeenCalledWith('evt-1', {
+        title: 'Hackathon Kickoff v2',
+        clubName: 'Computer Science Society',
+        date: '2026-12-10',
+        location: 'Main Hall',
+        capacity: 30,
+        description: 'Annual campus hackathon briefing.',
+      });
+      expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+    });
+  });
+
+  it('closes inline edit form when Cancel is clicked without calling onEditEvent', () => {
+    const onEditEvent = vi.fn();
+    render(
+      <EventList
+        events={sampleEvents}
+        onRegister={vi.fn()}
+        messages={{}}
+        userRole="admin"
+        onEditEvent={onEditEvent}
+        onDeleteEvent={vi.fn()}
+      />
+    );
+
+    const editButtons = screen.getAllByRole('button', { name: /^edit$/i });
+    fireEvent.click(editButtons[0]);
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    expect(screen.queryByRole('button', { name: /save changes/i })).not.toBeInTheDocument();
+    expect(onEditEvent).not.toHaveBeenCalled();
   });
 
   it('displays per-event feedback messages for matching event _id keys', () => {

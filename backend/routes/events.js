@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Event = require('../models/Event');
+const Registration = require('../models/Registration');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -68,6 +69,67 @@ router.post('/', auth, adminOnly, async (req, res) => {
   } catch (err) {
     console.error('Error creating event:', err);
     res.status(500).json({ error: 'Server error while creating event' });
+  }
+});
+
+router.put('/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const { title, clubName, date, location, description, capacity } = req.body;
+    const parsedCapacity = Number(capacity);
+
+    if (
+      !title ||
+      !clubName ||
+      !date ||
+      !location ||
+      !description ||
+      !Number.isFinite(parsedCapacity) ||
+      parsedCapacity < 1
+    ) {
+      return res
+        .status(400)
+        .json({ error: 'All fields (including a valid capacity of at least 1) are required' });
+    }
+
+    const existingEvent = await Event.findById(req.params.id);
+    if (!existingEvent) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const currentRegistered = existingEvent.registeredCount ?? 0;
+    if (parsedCapacity < currentRegistered) {
+      return res.status(400).json({
+        error: `Capacity cannot be less than current registrations (${currentRegistered})`,
+      });
+    }
+
+    existingEvent.title = title;
+    existingEvent.clubName = clubName;
+    existingEvent.date = date;
+    existingEvent.location = location;
+    existingEvent.description = description;
+    existingEvent.capacity = parsedCapacity;
+
+    await existingEvent.save();
+    res.status(200).json({ message: 'Event updated successfully!', event: existingEvent });
+  } catch (err) {
+    console.error('Error updating event:', err);
+    res.status(500).json({ error: 'Server error while updating event' });
+  }
+});
+
+router.delete('/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const deletedEvent = await Event.findByIdAndDelete(req.params.id);
+    if (!deletedEvent) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    await Registration.deleteMany({ event: req.params.id });
+    res.status(200).json({ message: 'Event deleted successfully!' });
+  } catch (err) {
+    console.error('Error deleting event:', err);
+    res.status(500).json({ error: 'Server error while deleting event' });
   }
 });
 
