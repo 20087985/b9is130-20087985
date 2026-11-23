@@ -135,6 +135,26 @@ describe('Home component', () => {
     expect(screen.queryByRole('button', { name: /\+ create event/i })).not.toBeInTheDocument();
   });
 
+  it('hides My Registrations tab for admin users', async () => {
+    localStorage.setItem('user', JSON.stringify({ name: 'Basima', role: 'admin' }));
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockEvents,
+      })
+    );
+
+    render(<Home onLogout={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('EventList Count: 2')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /my registrations/i })).not.toBeInTheDocument();
+  });
+
   it('calls onLogout when Logout button is clicked', async () => {
     vi.stubGlobal(
       'fetch',

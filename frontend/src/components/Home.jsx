@@ -60,6 +60,9 @@ export default function Home({ onLogout }) {
     if (tab === 'create' && userRole !== 'admin') {
       return;
     }
+    if (tab === 'registrations' && userRole === 'admin') {
+      return;
+    }
     setActiveTab(tab);
     setError(null);
     if (tab === 'events') {
@@ -194,12 +197,14 @@ export default function Home({ onLogout }) {
           >
             All Events
           </button>
-          <button
-            onClick={() => handleTabSwitch('registrations')}
-            style={{ padding: '10px 20px', backgroundColor: activeTab === 'registrations' ? '#007bff' : '#e0e0e0', color: activeTab === 'registrations' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            My Registrations
-          </button>
+          {userRole !== 'admin' && (
+            <button
+              onClick={() => handleTabSwitch('registrations')}
+              style={{ padding: '10px 20px', backgroundColor: activeTab === 'registrations' ? '#007bff' : '#e0e0e0', color: activeTab === 'registrations' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              My Registrations
+            </button>
+          )}
           {userRole === 'admin' && (
             <button
               onClick={() => handleTabSwitch('create')}
