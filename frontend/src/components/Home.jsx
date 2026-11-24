@@ -167,15 +167,16 @@ export default function Home({ onLogout }) {
   );
 
   return (
-    <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto' }}>
+    <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto', color: '#212529' }}>
       {/* Top Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <span style={{ fontSize: '16px', color: '#555' }}>
+        <span style={{ fontSize: '16px', color: '#333' }}>
           Welcome, <strong>{userName || 'Student'}</strong>!
         </span>
         <button
+          type="button"
           onClick={onLogout}
-          style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{ backgroundColor: '#c82333', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
         >
           Logout
         </button>
@@ -183,42 +184,48 @@ export default function Home({ onLogout }) {
 
       {/* Hero Header & Navigation Tabs */}
       <header style={{ textAlign: 'center', marginBottom: '30px', backgroundColor: '#f8f9fa', padding: '30px', borderRadius: '8px' }}>
-        <h1 style={{ color: '#333', marginBottom: '10px', fontSize: '32px' }}>
+        <h1 style={{ color: '#212529', marginBottom: '10px', fontSize: '32px' }}>
           Campus Club Event RSVP & Attendance Manager
         </h1>
-        <p style={{ color: '#666', fontSize: '16px' }}>
+        <p style={{ color: '#495057', fontSize: '16px' }}>
           Discover exciting student society events, register instantly, and track your attendance!
         </p>
 
-        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+        <nav aria-label="Event sections" style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <button
+            type="button"
+            aria-pressed={activeTab === 'events'}
             onClick={() => handleTabSwitch('events')}
-            style={{ padding: '10px 20px', backgroundColor: activeTab === 'events' ? '#007bff' : '#e0e0e0', color: activeTab === 'events' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ padding: '10px 20px', backgroundColor: activeTab === 'events' ? '#0056b3' : '#e0e0e0', color: activeTab === 'events' ? '#fff' : '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
           >
             All Events
           </button>
           {userRole !== 'admin' && (
             <button
+              type="button"
+              aria-pressed={activeTab === 'registrations'}
               onClick={() => handleTabSwitch('registrations')}
-              style={{ padding: '10px 20px', backgroundColor: activeTab === 'registrations' ? '#007bff' : '#e0e0e0', color: activeTab === 'registrations' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ padding: '10px 20px', backgroundColor: activeTab === 'registrations' ? '#0056b3' : '#e0e0e0', color: activeTab === 'registrations' ? '#fff' : '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
             >
               My Registrations
             </button>
           )}
           {userRole === 'admin' && (
             <button
+              type="button"
+              aria-pressed={activeTab === 'create'}
               onClick={() => handleTabSwitch('create')}
-              style={{ padding: '10px 20px', backgroundColor: activeTab === 'create' ? '#28a745' : '#e0e0e0', color: activeTab === 'create' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ padding: '10px 20px', backgroundColor: activeTab === 'create' ? '#1e7e34' : '#e0e0e0', color: activeTab === 'create' ? '#fff' : '#212529', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
             >
               + Create Event
             </button>
           )}
-        </div>
+        </nav>
       </header>
 
       {/* Main Display Area */}
-      <section>
-        <h2 style={{ borderBottom: '2px solid #007bff', paddingBottom: '10px', marginBottom: '20px' }}>
+      <main>
+        <h2 style={{ borderBottom: '2px solid #0056b3', paddingBottom: '10px', marginBottom: '20px' }}>
           {activeTab === 'events' && 'Upcoming Campus Events'}
           {activeTab === 'registrations' && 'Events You Are Registered For'}
           {activeTab === 'create' && userRole === 'admin' && 'Create a New Event'}
@@ -229,6 +236,7 @@ export default function Home({ onLogout }) {
           <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
             <input
               type="text"
+              aria-label="Search events by title or club"
               placeholder="Search events by title or club..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -237,17 +245,18 @@ export default function Home({ onLogout }) {
                 maxWidth: '500px', 
                 padding: '12px 15px', 
                 borderRadius: '6px', 
-                border: '1px solid #ccc', 
+                border: '1px solid #495057', 
                 fontSize: '15px',
-                outline: 'none',
+                color: '#212529',
+                backgroundColor: '#fff',
                 boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.05)'
               }}
             />
           </div>
         )}
 
-        {loading && <p>Loading...</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {loading && <p role="status">Loading...</p>}
+        {error && <p role="alert" style={{ color: '#b02a37', fontWeight: 'bold' }}>{error}</p>}
 
         {!loading && !error && activeTab === 'events' && (
           <EventList
@@ -267,7 +276,7 @@ export default function Home({ onLogout }) {
         {!loading && !error && activeTab === 'create' && userRole === 'admin' && (
           <CreateEvent onEventCreated={() => handleTabSwitch('events')} />
         )}
-      </section>
+      </main>
     </div>
   );
 }

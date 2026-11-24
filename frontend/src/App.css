@@ -130,6 +130,10 @@
     &:hover {
       box-shadow: var(--shadow);
     }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
     .button-icon {
       height: 18px;
       width: 18px;
@@ -180,5 +184,12 @@
   &::after {
     right: 0;
     border-right-color: var(--border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .counter,
+  #next-steps ul a {
+    transition: none;
   }
 }
