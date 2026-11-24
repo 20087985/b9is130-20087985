@@ -65,6 +65,7 @@ export default function Home({ onLogout }) {
     }
     setActiveTab(tab);
     setError(null);
+    setMessage({});
     if (tab === 'events') {
       fetchEvents();
     } else if (tab === 'registrations') {
