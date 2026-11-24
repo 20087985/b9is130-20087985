@@ -1,16 +1,46 @@
-# React + Vite
+Campus Club Event & Attendance Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web application for managing student society/club events, seat availability, event registration, and role-based event administration.
 
-Currently, two official plugins are available:
+Live Deployment & Repository Links
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Frontend (Live):** `https://b9is130-20087985.vercel.app/`
+**Backend API (Render):** `https://b9is130-20087985-backend.onrender.com`
+**GitHub Repository:** `https://github.com/20087985/b9is130-20087985`
 
-## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Local Setup and Running
+ To run backend - cd backend and node server.js
+To run frontend - cd frontend and npm run dev
 
-## Expanding the ESLint configuration
+To run test 
+For backend test - npm test
+For frontend test - npm test
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+Features
+
+**Authentication & Role-Based Access Control (RBAC):**
+   User registration and login with JWT authentication.
+   Self-registration assigns the default 'student' role;
+**Event Browsing & Search:**
+  View upcoming campus events with club name, date, location, seat capacity, remaining spots, and description.
+  Search events by title or club name.
+**Student Event Registration:**
+  Students can register for available events while seat capacity remains open; full events display capacity status.
+**Admin Event Management:**
+  Admins can create new events (+ Create Event), edit existing event details/capacity, and delete events (Edit and Delete actions), without seeing the student Register Now button.
+
+Tech Stack
+
+**Frontend:** React (Vite), JavaScript, HTML/CSS
+**Backend:** Node.js, Express, Mongoose, JSON Web Tokens (JWT)
+**Database:** MongoDB Atlas (test database)
+**Testing:** Automated unit/component tests
+**Hosting:** Render (Backend Web Service, main branch auto-deploy) and Vercel/Frontend
+
+Environment Variables
+
+Backend (.env / Render Environment)
+PORT=5000
+MONGO_URI='https://cloud.mongodb.com/v2/6ad7507d12bfb6ee199b5610#/explorer/6ad75316c040fa73eed61cf6/test/users/find'
