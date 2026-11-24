@@ -233,25 +233,27 @@ export default function EventList({
                 )}
                 <p style={{ color: '#343a40' }}>{event.description}</p>
 
-                <button
-                  type="button"
-                  onClick={() => onRegister(event._id)}
-                  disabled={isFull}
-                  style={{
-                    backgroundColor: isFull ? '#5a6268' : '#1e7e34',
-                    color: '#fff',
-                    border: 'none',
-                    padding: '10px 16px',
-                    borderRadius: '4px',
-                    cursor: isFull ? 'not-allowed' : 'pointer',
-                    fontWeight: 'bold',
-                    width: '100%',
-                    marginTop: '10px',
-                    opacity: isFull ? 0.85 : 1,
-                  }}
-                >
-                  {isFull ? 'Event Full' : 'Register Now'}
-                </button>
+                {userRole !== 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => onRegister(event._id)}
+                    disabled={isFull}
+                    style={{
+                      backgroundColor: isFull ? '#5a6268' : '#1e7e34',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '10px 16px',
+                      borderRadius: '4px',
+                      cursor: isFull ? 'not-allowed' : 'pointer',
+                      fontWeight: 'bold',
+                      width: '100%',
+                      marginTop: '10px',
+                      opacity: isFull ? 0.85 : 1,
+                    }}
+                  >
+                    {isFull ? 'Event Full' : 'Register Now'}
+                  </button>
+                )}
 
                 {userRole === 'admin' && (
                   <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>

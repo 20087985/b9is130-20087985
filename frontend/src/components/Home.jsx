@@ -186,7 +186,7 @@ export default function Home({ onLogout }) {
       {/* Hero Header & Navigation Tabs */}
       <header style={{ textAlign: 'center', marginBottom: '30px', backgroundColor: '#f8f9fa', padding: '30px', borderRadius: '8px' }}>
         <h1 style={{ color: '#212529', marginBottom: '10px', fontSize: '32px' }}>
-          Campus Club Event RSVP & Attendance Manager
+          Campus Club Event & Attendance Manager
         </h1>
         <p style={{ color: '#495057', fontSize: '16px' }}>
           Discover exciting student society events, register instantly, and track your attendance!
